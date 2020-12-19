@@ -1,0 +1,3 @@
+include ':UselessThings'
+include ':app'
+rootProject.name = "MyFirstLibrary"
