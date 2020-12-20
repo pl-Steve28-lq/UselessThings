@@ -31,13 +31,13 @@ class UselessProcessor: AbstractProcessor() {
         return SourceVersion.latestSupported()
     }
 
-    override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment): Boolean {
-        val classElements = roundEnv.getElementsAnnotatedWith(Chaining::class.java)
-        if (!checkElementType(ElementKind.CLASS, classElements)) return false
+    private fun addFunc(func: FunSpec) = fileBuilder.addFunction(func)
 
-        classElements.forEach {
-            generate(it).forEach { func ->
-                fileBuilder.addFunction(func)
+    override fun process(annotations: MutableSet<out TypeElement>?, roundEnv: RoundEnvironment): Boolean {
+        val p = process(roundEnv)
+        p(Chaining::class.java, ElementKind.CLASS) {
+            processChaining(it).forEach { func ->
+                addFunc(func)
             }
         }
 
@@ -47,7 +47,29 @@ class UselessProcessor: AbstractProcessor() {
         return true
     }
 
-    private fun generate(classElement: Element): MutableList<FunSpec> {
+    private fun process(
+            roundEnv: RoundEnvironment
+    ): (cls: Class<out Annotation>,
+        kind: ElementKind,
+        func: (Element) -> Unit) -> Unit {
+        fun asdf(
+                cls: Class<out Annotation>,
+                kind: ElementKind,
+                func: (Element) -> Unit
+        ) {
+            roundEnv.getElementsAnnotatedWith(cls)
+                    .forEach {
+                        if (it.kind != kind) warning(kind, it)
+                        else {
+                            func(it)
+                        }
+                    }
+        }
+
+        return { cls, kind, func -> asdf(cls, kind, func)}
+    }
+
+    private fun processChaining(classElement: Element): MutableList<FunSpec> {
         val res: MutableList<FunSpec> = mutableListOf()
 
         val fieldElement = classElement.enclosedElements
@@ -76,21 +98,11 @@ class UselessProcessor: AbstractProcessor() {
         return res
     }
 
-    private fun checkElementType(kind: ElementKind, elements: Set<Element>): Boolean {
-        if (elements.isEmpty()) return false
-
-        elements.forEach {
-            if (it.kind != kind) {
-                printMessage(
-                        Diagnostic.Kind.ERROR, "Only ${kind.name} Are Supported", it
-                )
-                return false
-            }
-        }
-        return true
-    }
-
-    private fun printMessage(kind: Diagnostic.Kind, message: String, element: Element) {
-        processingEnv.messager.printMessage(kind, message, element)
+    private fun warning(kind: ElementKind, element: Element) {
+        processingEnv.messager.printMessage(
+                Diagnostic.Kind.ERROR,
+                "Only ${kind.name} Are Supported",
+                element
+        )
     }
 }
