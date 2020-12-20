@@ -110,7 +110,7 @@ fun equality(th: String, other: String): Double {
     var good = 0
     val t = th.decompose().toArray()
     val o = other.decompose().toArray()
-    for (i in 0..min(t.size, o.size)-1) {
+    for (i in 0 until min(t.size, o.size)) {
         if (t[i] == o[i]) good += 1
         all += 1
     }

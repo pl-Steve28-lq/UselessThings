@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.steve28.uselessthings.extensions.*
+import com.uselessthings.generated.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -12,6 +13,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(TAG, "안녕하세요".decompose())
         Log.d(TAG, "ㅇㅏㄴㄴㅕㅇㅎㅏㅅㅔㅇㅛ".compose())
+        TestClass(TAG)._asdf()._qwer()._zxcv()
     }
 
     companion object {
