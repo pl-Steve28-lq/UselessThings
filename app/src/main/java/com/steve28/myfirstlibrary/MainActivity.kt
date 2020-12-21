@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(TAG, "안녕하세요".decompose())
         Log.d(TAG, "ㅇㅏㄴㄴㅕㅇㅎㅏㅅㅔㅇㅛ".compose())
-        TestClass(TAG)._asdf()._qwer()._zxcv()
+        TestClass(TAG)._asdf(TAG)._qwer()._zxcv()
     }
 
     companion object {

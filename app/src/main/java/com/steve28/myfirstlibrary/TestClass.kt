@@ -5,7 +5,7 @@ import com.steve28.uselessthings.annotations.Chaining
 
 @Chaining
 class TestClass(private val TAG: String) {
-    fun asdf() { Log.d(TAG, "Test1") }
+    fun asdf(msg: String) { Log.d(TAG, msg) }
     fun qwer() { Log.d(TAG, "Test2") }
     fun zxcv() { Log.d(TAG, "Test3") }
 }

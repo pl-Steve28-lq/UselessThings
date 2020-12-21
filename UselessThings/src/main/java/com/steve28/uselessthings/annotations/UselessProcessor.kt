@@ -2,6 +2,7 @@ package com.steve28.uselessthings.annotations
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
@@ -12,6 +13,8 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.tools.Diagnostic
+import kotlin.reflect.jvm.internal.impl.name.FqName
+import kotlin.reflect.jvm.internal.impl.builtins.jvm.JavaToKotlinClassMap
 
 @AutoService(Processor::class)
 class UselessProcessor: AbstractProcessor() {
@@ -60,9 +63,7 @@ class UselessProcessor: AbstractProcessor() {
             roundEnv.getElementsAnnotatedWith(cls)
                     .forEach {
                         if (it.kind != kind) warning(kind, it)
-                        else {
-                            func(it)
-                        }
+                        else func(it)
                     }
         }
 
@@ -80,15 +81,21 @@ class UselessProcessor: AbstractProcessor() {
                     f.returnType.asTypeName().toString() == "kotlin.Unit"
 
                 val type =
-                    if (isUnit) classElement.asType().asTypeName()
-                    else f.returnType.asTypeName()
+                    (if (isUnit) classElement.asType()
+                    else f.returnType).asTypeName()
 
 
                 val funSpec = FunSpec.builder("_${f.simpleName}")
                     .receiver(classElement.asType().asTypeName())
                     .returns(type)
 
-                funSpec.addStatement("val res = this.${f.simpleName}()")
+                f.parameters.forEach { v ->
+                    val name = v.simpleName
+                    val type = v.asType().asTypeName().javaToKotlinType()
+                    funSpec.addParameter(name.toString(), type)
+                }
+
+                funSpec.addStatement("val res = this.${f.simpleName}(${f.parameters.joinToString(", ") { v -> v.simpleName }})")
                 funSpec.addStatement("return ${if (isUnit) "this" else "res"}")
 
                 res.add(funSpec.build())
@@ -104,5 +111,24 @@ class UselessProcessor: AbstractProcessor() {
                 "Only ${kind.name} Are Supported",
                 element
         )
+    }
+
+    private fun TypeName.javaToKotlinType(): TypeName {
+        return when (this) {
+            is ParameterizedTypeName -> {
+                (rawType.javaToKotlinType() as ClassName).parameterizedBy(
+                        typeArguments.map { it.javaToKotlinType() }.toTypedArray().toList()
+                )
+            }
+            is WildcardTypeName -> {
+                outTypes[0].javaToKotlinType()
+            }
+            else -> {
+                val className = JavaToKotlinClassMap.INSTANCE
+                        .mapJavaToKotlin(FqName(toString()))
+                        ?.asSingleFqName()?.asString()
+                return className?.let { ClassName.bestGuess(it) } ?: this
+            }
+        }
     }
 }
