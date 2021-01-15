@@ -15,4 +15,6 @@ dependencies {
     implementation "com.google.auto.service:auto-service:1.0-rc6"
     kapt "com.google.auto.service:auto-service:1.0-rc6"
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.4.20"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.11.3"
+    implementation 'org.jsoup:jsoup:1.13.1'
 }
